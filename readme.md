@@ -10,5 +10,6 @@ Example usage:
 
 ```shell
 pip3 install beautifulsoup4 pdfminer.six lxml bitarray
+wget https://github.com/pdf2htmlEX/pdf2htmlEX/releases/download/v0.18.8.rc1/pdf2htmlEX-0.18.8.rc1-master-20200630-Ubuntu-bionic-x86_64.AppImage -O pdf2htmlex.appimage
 python3 transformer.py test/VBA-21-526EZ-ARE.pdf --first-page 9 --bg-format svg --do-form --zoom 2
 ```
