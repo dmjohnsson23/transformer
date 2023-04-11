@@ -9,5 +9,6 @@ The application uses [Pdf2HtmlEX](https://pdf2htmlex.github.io/pdf2htmlEX/) to b
 Example usage:
 
 ```shell
+pip3 install beautifulsoup4 pdfminer.six lxml bitarray
 python3 transformer.py test/VBA-21-526EZ-ARE.pdf --first-page 9 --bg-format svg --do-form --zoom 2
 ```
