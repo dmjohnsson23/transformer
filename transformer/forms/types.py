@@ -4,7 +4,6 @@ from pdfminer.pdftypes import resolve1
 from bitarray import bitarray
 from enum import Enum
 from typing import Iterable, Any, List, Tuple
-from .utils import decode_pdf_value
 
 
 Rect = namedtuple('Rect', 'x1,y1,x2,y2')

@@ -1,26 +1,23 @@
 from __future__ import annotations
-from pdfminer.pdftypes import resolve1
-from pdfminer.psparser import PSLiteral, PSKeyword
-from pdfminer.utils import decode_text
+from pypdf import PdfReader
 
+def get_fields_annotations_by_page(reader:PdfReader, *, page_nos=None, fields=None):
+    """
+    Gets fields, along with the associated annotations, divided out by page number
 
-def decode_pdf_value(value):
-    if isinstance(value, (PSLiteral, PSKeyword)):
-        value = value.name
-    if isinstance(value, bytes):
-        value = decode_text(value)
-    return value
-
-
-def iter_pdf_form_fields(fields):
-    from .types import FormField # Import here to avoid circular import
-    for field in fields:
-        if isinstance(field, FormField):
-            field_obj = field
-        else:
-            field_obj = FormField(resolve1(field))
-        if field_obj.children is not None:
-            yield from iter_pdf_form_fields(field_obj.children)
-        else:
-            yield field_obj
-
+    Output is a dictionary in the form {page_no: {field_name: (field, annotation)}}
+    """
+    if page_nos is None:
+        page_nos = range(len(reader.pages))
+    if fields is None:
+        fields = reader.get_fields()
+    out = {}
+    for page_no, page in enumerate(reader.pages):
+        if page_no not in page_nos: continue
+        if page.annotations is None: continue
+        out[page_no] = {}
+        for name, field in fields.items():
+            for annot in page.annotations:
+                if annot.indirect_reference == field.indirect_reference:
+                    out[page_no][name] = (field, annot)
+    return out
