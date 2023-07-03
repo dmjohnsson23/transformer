@@ -3,7 +3,7 @@ from collections import defaultdict
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 from pypdf.constants import FieldDictionaryAttributes, AnnotationDictionaryAttributes
-from pypdf.generic import RectangleObject
+from pypdf.generic import RectangleObject, Field
 from .field_renderer import FieldRenderer
 from ..forms.utils import get_fields_annotations_by_page
 
@@ -18,10 +18,28 @@ def process_form(pdf_filename: str, soup: BeautifulSoup, zoom: int = 1, rename_f
         html_pages = html_form.find_all(class_='pf')
         rendered_fields = {}
         i = 0
-        for page_no, page_fields in get_fields_annotations_by_page(parser, fields=fields).items():
-            page = html_pages[page_no]
+        for page_no, pdf_page in enumerate(parser.pages):
+            if pdf_page.annotations is None: continue
+            html_page = html_pages[page_no]
             fieldset = soup.new_tag('div', attrs={'class':'form-inputs'})
-            for name, (field, annot) in page_fields.items():
+            for annot in pdf_page.annotations:
+                annot = annot.get_object()
+                # All field widgets are annotations with type "widget"
+                # See 12.5.6.19 at https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
+                if annot[AnnotationDictionaryAttributes.Subtype] != "/Widget":
+                    continue
+                # Actual field data *may* use the same dictionary as the widget, but may not. 
+                # E.g. for radio groups the parent is the field, and the children are the widgets
+                # Docs seem to indicate that /Parent should be absent when the annotation is the field,
+                # at least as I read it, but in practice this does not seem to actually be the case.
+                # So instead, I'm guessing based on the FT (field type, see 12.7.3.1)
+                if FieldDictionaryAttributes.FT in annot:
+                    field = Field(annot)
+                elif FieldDictionaryAttributes.Parent in annot and FieldDictionaryAttributes.FT in annot[FieldDictionaryAttributes.Parent].get_object():
+                    field = Field(annot[FieldDictionaryAttributes.Parent].get_object())
+                else:
+                    # I don't think this should ever happen, but if so I guess skip this widget
+                    continue
                 i += 1
                 if field.field_type == "/Btn":
                     if (field.flags or 0) & FieldDictionaryAttributes.FfBits.Radio:
@@ -54,7 +72,7 @@ def process_form(pdf_filename: str, soup: BeautifulSoup, zoom: int = 1, rename_f
                     input.label = field_labels[name]
                 else:
                     input.label = field.alternate_name
-                rect = RectangleObject(annot.get_object()[AnnotationDictionaryAttributes.Rect])
+                rect = RectangleObject(annot[AnnotationDictionaryAttributes.Rect])
                 rect = rect.scale(zoom, zoom)
                 # The PDF format considers the bottom-left corner to be the origin, so we use that to place
                 input.style = {
@@ -67,7 +85,7 @@ def process_form(pdf_filename: str, soup: BeautifulSoup, zoom: int = 1, rename_f
                 placeholder_name = f'field{i}'
                 rendered_fields[placeholder_name] = input.render()
                 fieldset.append(f'\n${{{placeholder_name}}}\n')
-            page.append(fieldset)
+            html_page.append(fieldset)
     style = soup.new_tag('style')
     style.append("""
         .form-inputs{
