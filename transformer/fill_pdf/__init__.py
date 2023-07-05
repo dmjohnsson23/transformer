@@ -17,7 +17,6 @@ def fill(template_pdf, output_pdf, data, *, output_pages=None, rename_fields={})
         writer.append(reader, pages=output_pages)
     # Split and interpret incoming data based on associated field type
     fields = reader.get_fields()
-    print(list(fields.keys()))
     fillable = {}
     imgs_to_paste = {}
     for name, value in data.items():

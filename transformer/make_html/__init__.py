@@ -8,6 +8,8 @@ from shutil import copyfileobj
 from string import Template
 
 def transform(input_path, output_path, *, pdf2html, pdf2html_options=[], no_scripts=False, no_ui=False, do_form=False, zoom=1):
+    if pdf2html is None:
+        pdf2html = os.path.join(os.path.dirname(__file__), '../pdf2htmlex.appimage')
     if not os.path.isfile(pdf2html):
         print("Cannot run pdf2html; path is not valid", file=sys.stderr)
         exit(1)
