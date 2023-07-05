@@ -5,7 +5,6 @@ from pypdf import PdfReader
 from pypdf.constants import FieldDictionaryAttributes, AnnotationDictionaryAttributes
 from pypdf.generic import RectangleObject, Field
 from .field_renderer import FieldRenderer
-from ..forms.utils import get_fields_annotations_by_page
 
 # See https://pdfminersix.readthedocs.io/en/latest/howto/acro_forms.html
 def process_form(pdf_filename: str, soup: BeautifulSoup, zoom: int = 1, rename_fields = {}, field_labels = {}):

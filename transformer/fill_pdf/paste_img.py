@@ -46,7 +46,8 @@ def paste_img(img, pdf_page:PageObject, x:int, y:int, width:int, height:int):
     del img
     stamp_pdf = PdfReader(img_as_pdf)
     # Overlay the PDF version of the image over the page
+    print(x, y, margin_x, margin_y, width, height)
     pdf_page.merge_transformed_page(
-        stamp_pdf,
-        Transformation().translate(x+margin_x, y+margin_y).scale(scale_factor, scale_factor)
+        stamp_pdf.pages[0],
+        Transformation().scale(scale_factor, scale_factor).translate(x+margin_x, y+margin_y)
     )
